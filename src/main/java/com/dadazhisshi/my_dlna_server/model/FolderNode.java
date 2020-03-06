@@ -6,20 +6,17 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import org.codehaus.jackson.annotate.JsonCreator;
-import org.codehaus.jackson.annotate.JsonProperty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
 public class FolderNode extends VirtualFolderNode {
 
-  static final File[] EMPTY_FILE_ARR = new File[0];
+  private static final File[] EMPTY_FILE_ARR = new File[0];
   private static final Logger LOG = LoggerFactory.getLogger(FolderNode.class);
-  final File folder;
+  private final File folder;
 
-  @JsonCreator
-  public FolderNode(@JsonProperty("path") File folder) {
+  public FolderNode(File folder) {
     super();
     setId(contentId(folder));
     setTitle(folder.getName());

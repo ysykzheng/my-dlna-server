@@ -6,7 +6,58 @@
 
   <groupId>com.dadazhishi</groupId>
   <artifactId>my-dlna-server</artifactId>
-  <version>1.0</version>
+  <dependencies>
+    <dependency>
+      <groupId>org.fourthline.cling</groupId>
+      <artifactId>cling-core</artifactId>
+      <version>2.1.2</version>
+      <exclusions>
+        <exclusion>
+          <groupId>com.sun</groupId>
+          <artifactId>tool</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.fourthline.cling</groupId>
+      <artifactId>cling-support</artifactId>
+      <version>2.1.2</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.seamless</groupId>
+          <artifactId>seamless-swing</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.nanohttpd</groupId>
+      <artifactId>nanohttpd</artifactId>
+      <version>2.3.1</version>
+    </dependency>
+    <!-- Logging -->
+
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>1.7.30</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>jul-to-slf4j</artifactId>
+      <version>1.7.30</version>
+    </dependency>
+    <dependency>
+      <artifactId>slf4j-simple</artifactId>
+      <groupId>org.slf4j</groupId>
+      <version>1.7.30</version>
+    </dependency>
+    <dependency>
+      <artifactId>argparse4j</artifactId>
+      <groupId>net.sourceforge.argparse4j</groupId>
+      <version>0.8.1</version>
+    </dependency>
+  </dependencies>
   <properties>
     <java.version>1.8</java.version>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -53,69 +104,5 @@
       <url>http://4thline.org/m2</url>
     </repository>
   </repositories>
-  <dependencies>
-    <dependency>
-      <groupId>org.fourthline.cling</groupId>
-      <artifactId>cling-core</artifactId>
-      <version>2.1.2</version>
-      <exclusions>
-        <exclusion>
-          <groupId>com.sun</groupId>
-          <artifactId>tool</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.fourthline.cling</groupId>
-      <artifactId>cling-support</artifactId>
-      <version>2.1.2</version>
-      <exclusions>
-        <exclusion>
-          <groupId>org.seamless</groupId>
-          <artifactId>seamless-swing</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>org.nanohttpd</groupId>
-      <artifactId>nanohttpd</artifactId>
-      <version>2.3.1</version>
-    </dependency>
-    <!-- Logging -->
-    <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-classic</artifactId>
-      <version>1.2.3</version>
-      <exclusions>
-        <exclusion>
-          <artifactId>slf4j-api</artifactId>
-          <groupId>org.slf4j</groupId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>slf4j-api</artifactId>
-      <version>1.7.30</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.slf4j</groupId>
-      <artifactId>jul-to-slf4j</artifactId>
-      <version>1.7.30</version>
-    </dependency>
-
-    <!-- JSON serialization -->
-    <dependency>
-      <groupId>org.codehaus.jackson</groupId>
-      <artifactId>jackson-mapper-lgpl</artifactId>
-      <version>1.9.13</version>
-    </dependency>
-    <dependency>
-      <artifactId>argparse4j</artifactId>
-      <groupId>net.sourceforge.argparse4j</groupId>
-      <version>0.8.1</version>
-    </dependency>
-  </dependencies>
+  <version>1.1</version>
 </project>
