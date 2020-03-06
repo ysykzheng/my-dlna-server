@@ -12,65 +12,63 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
-public class FolderNode<T extends Enum<T> & MediaFormat> extends VirtualFolderNode {
+public class FolderNode extends VirtualFolderNode {
 
   static final File[] EMPTY_FILE_ARR = new File[0];
   private static final Logger LOG = LoggerFactory.getLogger(FolderNode.class);
   final File folder;
-  final Class<T> formatClass;
 
   @JsonCreator
-  public FolderNode(@JsonProperty("title")
-      String title,
-      @JsonProperty("path")
-          File folder,
-      @JsonProperty("format")
-          String format) {
+  public FolderNode(@JsonProperty("path") File folder) {
     super();
-    setId(contentId(format, folder));
-    setTitle(title == null || title.trim().isEmpty() ? folder.getName() : title);
-    this.folder = folder;
-    this.formatClass = Formats.fromString(format);
-  }
-
-  public FolderNode(File folder, Class<T> formatClass) {
-    super();
-    setId(contentId(Formats.toString(formatClass), folder));
+    setId(contentId(folder));
     setTitle(folder.getName());
     this.folder = folder;
-    this.formatClass = formatClass;
   }
 
-  private static String contentId(String format, File folder) {
-    return format + (sha1(folder.getAbsolutePath()) + "-" + getSafeName(folder));
+  private static String contentId(File folder) {
+    return (sha1(folder.getAbsolutePath()) + "-" + getSafeName(folder));
   }
 
   private static String getSafeName(final File folder) {
     return folder.getName().replaceAll("[^a-zA-Z0-9]", "_");
   }
 
-  public static <T extends Enum<T> & MediaFormat> T getFormat(final String value,
-      final Class<T> enumClass) {
+  public static MediaFormat getFormat(final String value) {
     try {
-      return Enum.valueOf(enumClass, value);
-    } catch (IllegalArgumentException iae) {
+      for (VideoFormat format : VideoFormat.values()) {
+        if (format.getExt().equalsIgnoreCase(value)) {
+          return format;
+        }
+      }
+      for (AudioFormat format : AudioFormat.values()) {
+        if (format.getExt().equalsIgnoreCase(value)) {
+          return format;
+        }
+      }
+      for (ImageFormat format : ImageFormat.values()) {
+        if (format.getExt().equalsIgnoreCase(value)) {
+          return format;
+        }
+      }
+    } catch (IllegalArgumentException ignored) {
     }
     return null;
   }
 
   @Override
   public List<ContainerNode> getContainers() {
-    List<ContainerNode> result = new ArrayList<ContainerNode>(super.getContainers());
+    List<ContainerNode> result = new ArrayList<>(super.getContainers());
     for (File file : listFiles()) {
       if (file.isDirectory()) {
-        if(file.canRead()){
-          FolderNode<T> subFolder = new FolderNode<T>(file, formatClass);
+        if (file.canRead() && file.canExecute()) {
+          FolderNode subFolder = new FolderNode(file);
           if (!subFolder.getItems().isEmpty() || !subFolder.getContainers().isEmpty()) {
             result.add(subFolder);
             subFolder.setParent(this);
           }
-        }else {
-          LOG.warn("folder[{}] can not read",file);
+        } else {
+          LOG.warn("folder[{}] can not read", file);
         }
 
       }
@@ -85,13 +83,12 @@ public class FolderNode<T extends Enum<T> & MediaFormat> extends VirtualFolderNo
     for (File file : listFiles()) {
       if (file.isFile()) {
         MediaFormat format = getFormat(
-            file.getName().substring(file.getName().lastIndexOf('.') + 1).toUpperCase(),
-            this.formatClass);
+            file.getName().substring(file.getName().lastIndexOf('.') + 1).toUpperCase());
         if (format == null) {
           continue;
         }
-        ItemNode itemNode = new ItemNode(contentId(Formats.toString(this.formatClass), file), file,
-            format);
+        ItemNode itemNode = new ItemNode(contentId(file),
+            file, format);
         result.add(itemNode);
         itemNode.setParent(this);
       }
@@ -101,7 +98,7 @@ public class FolderNode<T extends Enum<T> & MediaFormat> extends VirtualFolderNo
   }
 
   private File[] listFiles() {
-    LOG.info("folder={}",folder);
+    LOG.info("folder={}", folder);
     if (!folder.exists()) {
       LOG.warn("{} does not exist", folder);
       return EMPTY_FILE_ARR;
@@ -113,14 +110,6 @@ public class FolderNode<T extends Enum<T> & MediaFormat> extends VirtualFolderNo
       return EMPTY_FILE_ARR;
     }
     return folder.listFiles();
-  }
-
-  public File getFolder() {
-    return folder;
-  }
-
-  public Class<? extends MediaFormat> getFormatClass() {
-    return formatClass;
   }
 
   @Override

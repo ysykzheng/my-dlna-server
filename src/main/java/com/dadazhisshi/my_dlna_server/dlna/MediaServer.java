@@ -46,7 +46,7 @@ public class MediaServer {
 
     final LocalService<ConnectionManagerService> connManSrv = new AnnotationLocalServiceBinder()
         .read(ConnectionManagerService.class);
-    connManSrv.setManager(new DefaultServiceManager<ConnectionManagerService>(connManSrv,
+    connManSrv.setManager(new DefaultServiceManager<>(connManSrv,
         ConnectionManagerService.class));
 
     final UDN usi = UDN.uniqueSystemIdentifier(Config.UDN_ID);

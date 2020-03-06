@@ -10,10 +10,6 @@ public class NodesMap {
   private NodesMap() {
   }
 
-  public static void clear() {
-    INSTANCE.clear();
-  }
-
   public static ContentNode get(String id) {
     return INSTANCE.get(id);
   }

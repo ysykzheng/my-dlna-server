@@ -1,53 +1,36 @@
 package com.dadazhisshi.my_dlna_server.http;
 
 import com.dadazhisshi.my_dlna_server.Config;
-import com.dadazhisshi.my_dlna_server.model.ItemNode;
-import com.dadazhisshi.my_dlna_server.model.NodesMap;
 import fi.iki.elonen.NanoHTTPD;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Iterator;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class Server extends NanoHTTPD {
 
+  private final String basePath;
   private static final Logger LOG = LoggerFactory.getLogger(Server.class);
 
-  public Server() {
-    super(Config.get().getHttpPort());
+  public Server(String basePath) {
+    super(Config.get().getPort());
+    this.basePath = basePath;
   }
 
   @Override
   public Response serve(IHTTPSession session) {
     Map<String, String> header = session.getHeaders();
-    Map<String, String> parms = session.getParms();
     String uri = session.getUri();
+    LOG.info("uri={}", uri);
 
-    if (LOG.isDebugEnabled()) {
-      LOG.debug("{} '{}", session.getMethod(), uri);
-
-      Iterator<String> e = header.keySet().iterator();
-      while (e.hasNext()) {
-        String value = e.next();
-        LOG.debug("  HDR: '{}' = '{}'", value, header.get(value));
-      }
-      e = parms.keySet().iterator();
-      while (e.hasNext()) {
-        String value = e.next();
-        LOG.debug("  PRM: '{}' = '{}'", value, parms.get(value));
-      }
-    }
-
-    final ItemNode node = (ItemNode) NodesMap.get(uri.replaceFirst("/", ""));
-    if (node == null) {
-      return createResponse(Response.Status.NOT_FOUND, NanoHTTPD.MIME_PLAINTEXT,
-          "Error 404, file not found.");
-    }
-
-    File file = node.getFile();
+    Path path1 = Paths.get(basePath, File.separator, uri);
+    File file = path1.toFile();
+    String mime = MimeTypes.getDefaultMimeByExtension(
+        file.getName().substring(file.getName().lastIndexOf('.') + 1));
     try {
       String etag = Integer.toHexString(
           (file.getAbsolutePath() + file.lastModified() + "" + file.length()).hashCode());
@@ -89,7 +72,7 @@ public class Server extends NanoHTTPD {
           fis.limit(endAt + 1);
           int contentLength = fis.available();
 
-          Response res = createResponse(Response.Status.PARTIAL_CONTENT, node.getFormat().getMime(),
+          Response res = createResponse(Response.Status.PARTIAL_CONTENT, mime,
               fis, contentLength);
           res.addHeader("Content-Length", Integer.toString(contentLength));
           res.addHeader("File-Size", Long.toString(fileLen));
@@ -100,10 +83,10 @@ public class Server extends NanoHTTPD {
         }
       } else {
         if (etag.equals(header.get("if-none-match"))) {
-          return createResponse(Response.Status.NOT_MODIFIED, node.getFormat().getMime(), "");
+          return createResponse(Response.Status.NOT_MODIFIED, mime, "");
         }
 
-        Response res = createResponse(Response.Status.OK, node.getFormat().getMime(),
+        Response res = createResponse(Response.Status.OK, mime,
             new RandomAccessFileInputStream(file), fileLen);
         res.addHeader("Content-Length", Long.toString(fileLen));
         res.addHeader("File-Size", Long.toString(fileLen));

@@ -92,7 +92,7 @@ public class ContentDirectoryService extends AbstractContentDirectoryService {
     } catch (final Exception e) {
       LOG.warn("Failed to generate directory listing.", e);
       throw new ContentDirectoryException(ContentDirectoryErrorCode.CANNOT_PROCESS,
-          e.toString()); // NOSONAR
+          e.toString());
     }
   }
 

@@ -1,9 +1,8 @@
 package com.dadazhisshi.my_dlna_server;
 
 import com.dadazhisshi.my_dlna_server.dlna.MediaServer;
-import com.dadazhisshi.my_dlna_server.dlna.MediaWatcher;
 import com.dadazhisshi.my_dlna_server.http.Server;
-import com.dadazhisshi.my_dlna_server.model.ContainerNode;
+import com.dadazhisshi.my_dlna_server.model.FolderNode;
 import com.dadazhisshi.my_dlna_server.model.NodesMap;
 import java.io.File;
 import java.net.Inet4Address;
@@ -15,6 +14,10 @@ import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.logging.LogManager;
+import net.sourceforge.argparse4j.ArgumentParsers;
+import net.sourceforge.argparse4j.inf.ArgumentParser;
+import net.sourceforge.argparse4j.inf.ArgumentParserException;
+import net.sourceforge.argparse4j.inf.Namespace;
 import org.fourthline.cling.DefaultUpnpServiceConfiguration;
 import org.fourthline.cling.UpnpService;
 import org.fourthline.cling.UpnpServiceImpl;
@@ -24,23 +27,49 @@ import org.slf4j.bridge.SLF4JBridgeHandler;
 
 public class MyDLNAServer {
 
+  private final String basePath;
+  private final String host;
+  private final Integer port;
   private static final Logger LOG = LoggerFactory.getLogger(MyDLNAServer.class);
+
+  public MyDLNAServer(String host, Integer port, String basePath) {
+    this.basePath = basePath;
+    this.host = host;
+    this.port = port;
+  }
 
   public static void main(String[] args) throws Exception {
     bridgeJul();
-    if (args.length != 1) {
-      System.err.println(Config.APP_NAME);
-      System.err.println(Config.METADATA_MODEL_DESCRIPTION);
-      System.err.println("usage: java -jar my-dlna-server-*.jar config.json");
-      System.exit(-1);
+
+    ArgumentParser parser = ArgumentParsers
+        .newFor("java -jar my-dlna-server-*-jar-with-dependencies.jar").build()
+        .defaultHelp(true)
+        .description("simple DLNA server for serving media files");
+    parser.addArgument("-p", "--port")
+        .setDefault(8899)
+        .required(false)
+        .help("http port");
+    List<InetAddress> ipAddresses = getIpAddresses();
+    parser.addArgument("-H", "--host")
+        .required(false)
+        .setDefault(ipAddresses.get(0)
+            .getHostAddress());
+    parser.addArgument("-d", "--dir")
+        .required(true)
+        .help("media file dir");
+    Namespace ns;
+    try {
+      ns = parser.parseArgs(args);
+    } catch (ArgumentParserException e) {
+      parser.handleError(e);
+      System.exit(1);
       return;
     }
+    Integer port = ns.getInt("port");
+    String host = ns.getString("host");
+    String dir = ns.getString("dir");
 
-    String configFile = args[0];
-    File file = new File(configFile);
-    LOG.info("use config file {}", file.getCanonicalPath());
-    Config.get().load(configFile);
-    MyDLNAServer server = new MyDLNAServer();
+    MyDLNAServer server = new MyDLNAServer(host, port, dir);
     server.start();
   }
 
@@ -70,29 +99,21 @@ public class MyDLNAServer {
   }
 
   public void start() throws Exception {
-    /**
-     * Set up IP address
-     */
-    if (Config.get().getIpAddress() == null) {
-      List<InetAddress> ipAddresses = getIpAddresses();
-      Config.get().setIpAddress(ipAddresses.get(0).getHostAddress());
-    }
-
+    Config.get().setPort(port);
+    Config.get().setHost(host);
+    Config.get().setBasePath(basePath);
     /**
      * Will bind to a single IP address
      */
-    System.setProperty("org.fourthline.cling.network.useAddresses", Config.get().getIpAddress());
+    System.setProperty("org.fourthline.cling.network.useAddresses", Config.get().getHost());
 
     /**
      * Initialize root node
      */
     LOG.info("Initializing root node...");
-    ContainerNode rootNode = Config.get().getContent();
-    rootNode.setId("0");
-    NodesMap.put(rootNode.getId(), rootNode);
-
-    final MediaWatcher mediaWatcher = new MediaWatcher();
-    mediaWatcher.start();
+    FolderNode node = new FolderNode(new File(basePath));
+    node.setId("0");
+    NodesMap.put(node.getId(), node);
 
     /**
      * Start up UPNP service
@@ -109,7 +130,7 @@ public class MyDLNAServer {
      * Start up content serving service
      */
     LOG.info("Starting HTTP server...");
-    final Server server = new Server();
+    Server server = new Server(basePath);
     server.start();
     LOG.info("HTTP server started");
 
@@ -120,8 +141,6 @@ public class MyDLNAServer {
       @Override
       public void run() {
         LOG.info("Shutting down " + Config.APP_NAME);
-        LOG.info("Shutting down MediaWatcher");
-        mediaWatcher.stop();
 
         LOG.info("Shutting down Cling UPNP service");
         upnpService.shutdown();

@@ -4,7 +4,6 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import org.codehaus.jackson.annotate.JsonProperty;
 
 public class VirtualFolderNode extends ContainerNode {
 
@@ -14,7 +13,7 @@ public class VirtualFolderNode extends ContainerNode {
     super(null, null);
   }
 
-  public VirtualFolderNode(@JsonProperty("title")
+  public VirtualFolderNode(
       String title) {
     super("Virtual-Folder-" + idGenerator.getAndIncrement(), title);
   }
@@ -28,7 +27,6 @@ public class VirtualFolderNode extends ContainerNode {
     return containers;
   }
 
-  @JsonProperty("folders")
   public void setContainers(List<ContainerNode> containers) {
     this.containers = containers;
     for (ContainerNode container : containers) {
@@ -43,7 +41,7 @@ public class VirtualFolderNode extends ContainerNode {
 
   public ContainerNode addContainer(ContainerNode container) {
     if (!(containers instanceof ArrayList<?>)) {
-      containers = new ArrayList<ContainerNode>(containers);
+      containers = new ArrayList<>(containers);
     }
     containers.add(container);
     container.setParent(this);
@@ -52,7 +50,7 @@ public class VirtualFolderNode extends ContainerNode {
 
   public ContainerNode removeContainer(ContainerNode container) {
     if (!(containers instanceof ArrayList<?>)) {
-      containers = new ArrayList<ContainerNode>(containers);
+      containers = new ArrayList<>(containers);
     }
     containers.remove(container);
     return this;

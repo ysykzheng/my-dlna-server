@@ -4,17 +4,10 @@ import com.dadazhisshi.my_dlna_server.Config;
 import java.io.File;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
-import org.codehaus.jackson.annotate.JsonSubTypes;
-import org.codehaus.jackson.annotate.JsonTypeInfo;
 import org.fourthline.cling.support.model.DIDLObject;
 import org.fourthline.cling.support.model.WriteStatus;
 import org.fourthline.cling.support.model.container.Container;
 
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.WRAPPER_OBJECT)
-@JsonSubTypes({@JsonSubTypes.Type(name = "folder", value = FolderNode.class),
-//    @JsonSubTypes.Type (name="last-added", value=LastAddedNode.class),
-//    @JsonSubTypes.Type (name="last-viewed", value=LastViewedNode.class),
-    @JsonSubTypes.Type(name = "virtual", value = VirtualFolderNode.class)})
 public abstract class ContainerNode extends ContentNode {
 
   static final AtomicInteger idGenerator = new AtomicInteger(0);
@@ -53,10 +46,6 @@ public abstract class ContainerNode extends ContentNode {
 
   public final int getChildCount() {
     return getContainers().size() + getItems().size();
-  }
-
-  public Class<? extends MediaFormat> getFormatClass() {
-    return null;
   }
 
   public ItemNode getItem(File f) {
